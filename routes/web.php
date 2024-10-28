@@ -18,11 +18,14 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__. '/auth.php';
 
 Route::middleware('admin')->group(function () {
-    Route::get('/admin/dashboard', [AdminController::class, 'AdminDashboard'])
-    ->name('admin.dashboard');
+    Route::get('/admin/dashboard', [AdminController::class, 'AdminDashboard'])->name('admin.dashboard');
+    Route::get('/admin/profile', [AdminController::class, 'AdminProfile'])->name('admin.profile');
+    Route::post('/admin/profile/store', [AdminController::class, 'AdminProfileStore'])->name('admin.profile.store');
+    Route::get('/admin/change/password', [AdminController::class, 'AdminChangePassword'])->name('admin.change.password');
+    Route::post('/admin/password/update', [AdminController::class, 'AdminPasswordUpdate'])->name('admin.password.update');
 });
 
 Route::get('/admin/login', [AdminController::class, 'AdminLogin'])
@@ -36,3 +39,8 @@ Route::get('/admin/forget_password', [AdminController::class, 'AdminForgetPasswo
 
 Route::post('/admin/password_submit', [AdminController::class, 'AdminPasswordSubmit'])
 ->name('admin.password_submit');
+
+Route::get('/admin/reset-password/{token}/{email}',
+[AdminController::class, 'AdminResetPassword']);
+Route::post('/admin/login_password_submit', [AdminController::class, 'AdminResetPasswordSubmit'])
+->name('admin.login_password_submit');
