@@ -2,65 +2,90 @@
 
 namespace App\Http\Controllers;
 
+// use Auth;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use App\Mail\Websitemail;
 use App\Models\Admin;
-use App\Http\Requests\StoreAdminRequest;
-use App\Http\Requests\UpdateAdminRequest;
+
+
 
 class AdminController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function AdminLogin()
     {
-        //
+        return view('admin.login');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function AdminDashboard()
     {
-        //
+        return view('admin.admin_dashboard');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreAdminRequest $request)
+    public function AdminLoginSubmit(Request $request)
     {
-        //
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        $check = $request->all();
+        $data = [
+            'email' => $check['email'],
+            'password' => $check['password'],
+        ];
+        if (Auth::guard('admin')->attempt($data)) {
+            return redirect()->route('admin.dashboard')->with(
+                'success',
+                'Login Successfully'
+            );
+
+        } else {
+            return redirect()->route('admin.login')->with(
+                'error',
+                'Invalid Creadentials'
+            );
+        }
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Admin $admin)
+    public function AdminLogout()
     {
-        //
+        Auth::guard('admin')->logout();
+        return redirect()->route('admin.login')->with(
+            'success',
+            'Logout Success'
+        );
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Admin $admin)
+    public function AdminForgetPassword()
     {
-        //
+        return view('admin.forget_password');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateAdminRequest $request, Admin $admin)
+    public function AdminPasswordSubmit(Request $request)
     {
-        //
-    }
+        $request->validate([
+            'email' => 'required|email',
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Admin $admin)
-    {
-        //
+        ]);
+
+        $admin_data = Admin::where('email', $request->email)->first();
+        if (!$admin_data) {
+            return redirect()->back()->with('error', 'Email Not Found!');
+        }
+
+        $token = hash('sha256', time());
+        $admin_data->token = $token;
+        $admin_data->update();
+
+        $reset_link = url('admin/reset-password/' . $token . '/' .
+            $request->email);
+        $subject = "Reset Password";
+        $message = "Please Clink on below link to reset password<br>";
+        $message .= "<a href='" . $reset_link . "'> Clik Here </a>";
+
+        \Mail::to($request->email)->send(new Websitemail($subject, $message));
+        return redirect()->back()->with('success', 'Reset Password Link Send On');
     }
 }
