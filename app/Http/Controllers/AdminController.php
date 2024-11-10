@@ -157,6 +157,7 @@ class AdminController extends Controller
         return redirect()->back()->with($notification);
     }
      // End Method
+
      private function deleteOldImage(string $oldPhotoPath): void {
         $fullPath = public_path('upload/admin_images/'.$oldPhotoPath);
         if (file_exists($fullPath)) {
